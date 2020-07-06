@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sUniqueIngressHostPath
+metadata:
+  name: unique-ingress-host-opa
+spec:
+  match:
+    kinds:
+      - apiGroups: ["extensions", "networking.k8s.io"]
+        kinds: ["Ingress"]
+    namespaces:
+      - "opatest"

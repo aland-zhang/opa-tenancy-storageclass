@@ -1,0 +1,37 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: allowedprojectpvcforsc
+spec:
+  crd:
+    spec:
+      names:
+        kind: AllowedProjectPvcforSc
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            projects:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package allowedprojectpvcforsc
+        violation[{"msg": msg}] {
+          pvcnamespace := input.review.object.metadata.namespace
+          not ns_in_project(pvcnamespace)
+          input.review.object.spec.storageClassName == "longhorn"
+          nsobject := data.inventory.namespace[namespace][_][_][name]
+          pvcproject := nsobject[pvcnamespace].metadata.labels["field.cattle.io/projectId"]
+          msg := sprintf("storage pvc <%v> is not allowed in this project <%v>, allowed projects are %v", [input.review.object.metadata.name, pvcproject, input.parameters.projects])
+        }
+
+        ns_in_project(pvcnamespace) = true {
+          nsobject := data.inventory.namespace[namespace][_][_][name]
+          pvcproject := nsobject[pvcnamespace].metadata.labels["field.cattle.io/projectId"]
+          pvcproject == input.parameters.projects[_]
+        }
+
+

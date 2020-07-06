@@ -1,0 +1,36 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: allowedprojectingressforf5
+spec:
+  crd:
+    spec:
+      names:
+        kind: AllowedProjectIngressforF5
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            projects:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package allowedprojectingressforf5
+        violation[{"msg": msg}] {
+          ingressnamespace := input.review.object.metadata.namespace
+          not ns_in_project(ingressnamespace)
+          input.review.object.metadata.annotations["virtual-server.f5.com/ip"] != ""
+          msg := sprintf("Ingress for F5 <%v> is not allowed in this project, allowed projects are %v", [input.review.object.metadata.name, input.parameters.projects])
+        }
+
+        ns_in_project(ingressnamespace) = true {
+          nsobject := data.inventory.cluster[_][_][name]
+          nsobject.metadata.name == ingressnamespace
+          ingressproject := nsobject.metadata.labels["field.cattle.io/projectId"]
+          ingressproject == input.parameters.projects[_]
+        }
+
+

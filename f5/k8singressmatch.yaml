@@ -1,0 +1,16 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAnnotationsMatch
+metadata:
+  name: ingress-must-match-vs-ip
+spec:
+  match:
+    kinds:
+      - apiGroups: ["extensions", "networking.k8s.io"]
+        kinds: ["Ingress"]
+    namespaces:
+      - "opatest"
+  parameters:
+    message: "All Ingress must match an `virtual-server.f5.com/ipr` annotation that points to your allocated one IP"
+    annotations:
+      - key: virtual-server.f5.com/ip
+        allowedRegex: "172.16.1.120"

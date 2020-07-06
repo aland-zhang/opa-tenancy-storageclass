@@ -1,0 +1,33 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: uniquevirtualserveripporthost
+spec:
+  crd:
+    spec:
+      names:
+        kind: UniqueVirtualServerIpportHost
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package uniquevirtualserveripporthost
+       
+        identical(obj, review) {
+          obj.metadata.namespace == review.object.metadata.namespace
+          obj.metadata.name == review.object.metadata.name
+        }
+        violation[{"msg": msg}] {
+          input.review.kind.kind == "Ingress"
+          re_match("^(extensions|networking.k8s.io)$", input.review.kind.group)
+          host := input.review.object.spec.rules[_].host
+          inputmetadata := input.review.object.metadata[_]
+          other := data.inventory.namespace[ns][otherapiversion]["Ingress"][name]
+          re_match("^(extensions|networking.k8s.io)/.+$", otherapiversion)
+          ipvalue := input.review.object.metadata.annotations["virtual-server.f5.com/ip"]
+          portvalue := input.review.object.metadata.annotations["virtual-server.f5.com/port"]
+          otheripvalue := other.metadata.annotations["virtual-server.f5.com/ip"]
+          otherportvalue := other.metadata.annotations["virtual-server.f5.com/port"]
+          other.spec.rules[_].host == host; otheripvalue == ipvalue; otherportvalue == portvalue
+          not identical(other, input.review)
+          msg := sprintf("ingress vitualserver ip port host conflicts with an existing ingress <%v>", [host])
+        }

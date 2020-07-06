@@ -1,0 +1,28 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: allowedpvcforsc
+spec:
+  crd:
+    spec:
+      names:
+        kind: AllowedPvcforSc
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          properties:
+            nspaces:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package allowedpvcforsc
+        violation[{"msg": msg}] {
+          pvcnamespace := input.review.object.metadata.namespace
+          input.parameters.nspaces[_] != pvcnamespace
+          input.review.object.spec.storageClassName == "longhorn"
+          msg := sprintf("storage pvc <%v> is not allowed in this namespace <%v>, allowed namespaces are %v", [input.review.object.metadata.name, pvcnamespace, input.parameters.nspaces])
+        }
+

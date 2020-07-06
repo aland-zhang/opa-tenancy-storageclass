@@ -1,0 +1,11 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: UniqueVirtualServerIpportHost
+metadata:
+  name: uniquevirtualserveripporthost
+spec:
+  match:
+    kinds:
+      - apiGroups: ["extensions", "networking.k8s.io"]
+        kinds: ["Ingress"]
+    namespaces:
+      - "opatest"

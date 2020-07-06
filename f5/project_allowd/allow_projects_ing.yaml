@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: AllowedProjectIngressforF5
+metadata:
+  name: project-ingress-for-ingress-f5
+spec:
+  match:
+    kinds:
+      - apiGroups: ["extensions", "networking.k8s.io"]
+        kinds: ["Ingress"]
+  parameters:
+    projects:
+      - "p-ngt5j"

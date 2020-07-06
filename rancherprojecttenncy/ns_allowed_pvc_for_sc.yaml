@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: AllowedPvcforSc
+metadata:
+  name: pvc-for-opatestnswithlonghorn
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["PersistentVolumeClaim"]
+  parameters:
+    nspaces:
+      - "opatest"

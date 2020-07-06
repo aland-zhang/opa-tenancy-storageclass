@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: AllowedProjectPvcforSc
+metadata:
+  name: project-pvc-for-opatestnswithlonghorn
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["PersistentVolumeClaim"]
+  parameters:
+    projects:
+      - "p-6sw57"
